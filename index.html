@@ -1,0 +1,1037 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Project Chrysalis — The Hollow Tide</title>
+<style>
+:root{--bg:#0a0c15;--bg2:#0e1120;--panel:#151928;--panel2:#1b2036;
+--line:#252b45;--line2:#303757;--text:#e9ecf8;--dim:#8f97b3;--faint:#646d8c;
+--head:#f4f6ff;--accent:#7c5cff;--accent2:#4dc3ff;--gold:#f0b34c;
+--coral:#ff6b81;--grad:linear-gradient(135deg,#7c5cff,#4dc3ff);
+--shadow:0 10px 34px rgba(0,0,0,.45)}
+*{box-sizing:border-box}
+body{margin:0;color:var(--text);
+background:radial-gradient(1100px 640px at 85% -12%,#1b1f3d 0%,var(--bg) 55%),
+radial-gradient(900px 600px at -10% 110%,#141a35 0%,var(--bg) 60%),var(--bg);
+font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+#gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.gatecard{background:linear-gradient(180deg,var(--panel2),var(--panel));
+border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);
+padding:42px 36px;max-width:430px;width:100%;text-align:center}
+.gatecard h1{margin:.2em 0 .1em;font-size:1.4rem;color:var(--head)}
+.gatecard p{color:var(--dim);font-size:.95rem;margin:.4em 0 1.4em}
+.gatecard input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line2);
+background:var(--bg2);color:var(--text);font-size:1rem;text-align:center;letter-spacing:.06em}
+.gatecard input:focus{outline:none;border-color:var(--accent);
+box-shadow:0 0 0 3px rgba(124,92,255,.22)}
+.gatecard button{margin-top:14px;width:100%;padding:12px;border:0;border-radius:12px;
+cursor:pointer;background:var(--grad);color:#fff;font-weight:800;font-size:1rem;
+box-shadow:0 6px 18px rgba(124,92,255,.35)}
+.gatecard .err{color:var(--coral);font-size:.9rem;min-height:1.3em;margin-top:10px}
+#app{display:none;max-width:1020px;margin:0 auto;padding:0 20px 120px}
+header.top{position:sticky;top:0;z-index:5;background:rgba(10,12,21,.9);
+backdrop-filter:blur(10px);border-bottom:1px solid var(--line);
+margin:0 -20px;padding:12px 20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.brand{font-weight:800;color:var(--head)}
+.brand .tide{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.tabbtn{padding:7px 18px;border-radius:999px;border:1px solid var(--line2);background:transparent;
+color:var(--dim);cursor:pointer;font-weight:700;font-size:.92rem;transition:all .15s}
+.tabbtn:hover{color:var(--text);border-color:var(--faint)}
+.tabbtn.on{background:var(--grad);border-color:transparent;color:#fff;
+box-shadow:0 4px 14px rgba(124,92,255,.4)}
+.updated{margin-left:auto;color:var(--dim);font-size:.8rem}
+h1{color:var(--head);font-size:1.9rem;margin:.9em 0 .2em}
+h2{color:var(--head)}
+.stat{display:inline-block;background:linear-gradient(180deg,var(--panel2),var(--panel));
+border:1px solid var(--line);border-radius:16px;padding:14px 24px;margin:8px 12px 8px 0;
+box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.stat .v{font-size:1.6rem;font-weight:800;background:var(--grad);
+-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat.goldv .v{background:none;color:var(--gold)}
+.stat .k{color:var(--dim);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.pcard{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);
+border-radius:16px;padding:16px 20px;margin:16px 0;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+.pcard h2{margin:.1em 0 .2em}
+.pmeta{color:var(--dim);font-size:.86rem;margin-bottom:8px}
+.pmeta b{color:var(--gold)}
+.fsm{font-size:.85rem;font-weight:500}
+table{border-collapse:collapse;width:100%;font-size:.9rem;margin:.6em 0;border-radius:12px;overflow:hidden}
+th{background:var(--panel2);color:var(--dim);text-align:left;padding:9px 12px;
+font-size:.74rem;text-transform:uppercase;letter-spacing:.07em}
+td{padding:8px 12px;border-top:1px solid var(--line);vertical-align:top}
+tbody tr:nth-child(odd){background:rgba(255,255,255,.02)}
+.muted{color:var(--dim)}
+.hint{color:var(--faint);font-size:.82rem;line-height:1.5}
+/* ---- the base map ---- */
+.livetag{margin-left:10px;font-size:.78rem;color:var(--dim);white-space:nowrap}
+.livedot,.offdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:1px}
+.livedot{background:#5ce08a;box-shadow:0 0 8px #5ce08a;animation:lpulse 2.4s infinite}
+.offdot{background:var(--faint)}
+@keyframes lpulse{50%{opacity:.4}}
+.basedesc{color:var(--dim);font-size:.94rem;max-width:70ch}
+.bmapwrap{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);
+background:#0a0d18;box-shadow:0 8px 26px rgba(0,0,0,.4);margin:14px 0 6px;touch-action:manipulation}
+.bground{position:absolute;inset:0;background:
+radial-gradient(75% 68% at 50% 52%,#1d2445 0%,#161b34 52%,#10142a 78%,#0b0e1d 100%)}
+.bground::after{content:"";position:absolute;left:9%;top:9%;right:9%;bottom:9%;
+border:2px dashed rgba(124,92,255,.28);border-radius:50%}
+.boverlay{position:absolute;inset:0}
+.bhale{position:absolute;transform:translate(-50%,-50%);cursor:pointer;text-align:center;z-index:2}
+.bhale .hbox{width:46px;height:36px;margin:0 auto;border-radius:10px;display:flex;
+align-items:center;justify-content:center;font-size:17px;
+background:linear-gradient(160deg,#262e56,#1a2038);border:1px solid var(--line2);
+box-shadow:0 3px 10px rgba(0,0,0,.45);transition:all .15s}
+.bhale:hover .hbox{border-color:var(--accent);transform:translateY(-1px)}
+.bhale.sel .hbox{outline:2px solid var(--accent);box-shadow:0 0 14px rgba(124,92,255,.55)}
+.bhale .hlbl{margin-top:3px;font-size:10.5px;font-weight:700;color:var(--text);
+text-shadow:0 1px 4px #000,0 0 8px #000;white-space:nowrap}
+.bnpc{position:absolute;width:22px;height:22px;border-radius:50%;z-index:3;
+transform:translate(-50%,-50%);background:var(--grad);border:2px solid #fff;color:#fff;
+font-size:8.5px;font-weight:800;display:flex;align-items:center;justify-content:center;
+cursor:pointer;box-shadow:0 0 10px rgba(124,92,255,.55);user-select:none}
+.bnpc::after{content:"";position:absolute;inset:-2px;border-radius:50%;
+border:2px solid rgba(124,92,255,.8);animation:bping 2.6s ease-out infinite}
+@keyframes bping{0%{transform:scale(.6);opacity:.9}80%,100%{transform:scale(2);opacity:0}}
+.bnpc.sel{outline:2px solid #fff;box-shadow:0 0 16px rgba(77,195,255,.8)}
+.npcprof-head{display:flex;gap:14px;align-items:center;margin-bottom:8px}
+.portrait{width:64px;height:64px;border-radius:14px;flex-shrink:0;display:flex;
+align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#fff;
+background:var(--grad);overflow:hidden}
+.portrait img{width:100%;height:100%;object-fit:cover;display:block}
+.taskline{margin:10px 0 4px;font-size:.92rem}
+.taskline .k,.routine .k{display:inline-block;font-size:.7rem;font-weight:800;color:var(--accent2);
+text-transform:uppercase;letter-spacing:.09em;margin-right:8px}
+.routine{margin:10px 0 2px;font-size:.92rem}
+.routine ul{margin:6px 0 0;padding-left:20px;color:var(--dim)}
+.routine li{margin:2px 0}
+.moverow{display:flex;gap:8px;margin-top:12px}
+.moverow select{flex:1;padding:9px 10px;border-radius:10px;border:1px solid var(--line2);
+background:var(--bg2);color:var(--text);font:inherit}
+.gbtn{padding:9px 20px;border:0;border-radius:10px;background:var(--grad);color:#fff;
+font-weight:800;cursor:pointer;font:inherit;box-shadow:0 4px 14px rgba(124,92,255,.35)}
+.gbtn:disabled{opacity:.55;cursor:default}
+.npclink{color:var(--text);text-decoration:none;border-bottom:1px dotted var(--faint)}
+.npcgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.npcgrid .pcard{margin:0}
+
+/* ================= PHONES =================
+   Owner ruling: every player-facing site has to work on a phone, not just the
+   dev dashboard. This file had ZERO media queries. Most of the layout is
+   already fluid — max-width, auto-fill grids, flex-wrap — so what was actually
+   broken is narrower than it looks: the gutters, the tables, and the touch
+   targets on the base map, which is the one place a player moves an NPC.
+
+   The breakpoint is 720px rather than a device width: that is where the
+   40px of side padding plus a table of four columns stops fitting. */
+@media (max-width:720px){
+  #app{padding:0 12px 90px}
+  header.top{margin:0 -12px;padding:10px 12px;gap:7px}
+  .updated{margin-left:0;flex:1 1 100%;font-size:.74rem}
+  h1{font-size:1.45rem}
+  /* Tables carry six columns on the roster and squad views. They scroll
+     inside their own box so the PAGE never scrolls sideways. */
+  .tscroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tscroll table{min-width:520px}
+  .stat{display:block;margin:8px 0;padding:12px 16px}
+  .basedesc{max-width:none}
+  .npcgrid{grid-template-columns:1fr}
+  .npcprof-head{flex-wrap:wrap}
+  .moverow{flex-wrap:wrap}
+  .moverow select{flex:1 1 100%}
+  /* 44px touch minimum. A tab pill was 33px and the hale boxes on the base
+     map are what a player taps to move somebody. */
+  .tabbtn{padding:11px 18px;min-height:44px}
+  .gbtn,.moverow select,.gatecard button,.gatecard input{min-height:44px}
+  /* 16px stops iOS zooming the page the moment the passcode field is
+     focused — on the gate, that is the first thing anyone touches. */
+  .gatecard input,.moverow select,input,select,textarea{font-size:16px}
+  .bhale .hbox{width:44px;height:44px;position:relative}
+  /* The NPC dots stay small so a hale with six of them still reads, but the
+     touchable area around each is the full 44px. This is the one place a
+     PLAYER moves somebody, so it has to answer a thumb. */
+  .bnpc{width:26px;height:26px;font-size:9.5px}
+  .bnpc::before{content:"";position:absolute;left:50%;top:50%;width:44px;
+    height:44px;border-radius:50%;transform:translate(-50%,-50%)}
+  .gatecard{padding:30px 20px}
+  th,td{padding:8px 9px}
+}
+@media (max-width:420px){
+  .tabbtn{flex:1 1 auto;text-align:center}
+}
+
+/* ---- NPC detail: blurb, health, abilities ---- */
+.npcblurb{margin:10px 0 2px;font-size:14px;line-height:1.55;color:#c7d4e6}
+.forgeline{margin-top:2px}
+.vitals{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;
+  padding-top:12px;border-top:1px solid #1e2c40}
+.vitals .k{display:block;font-size:11px;letter-spacing:.5px;
+  text-transform:uppercase;color:#7f92ad;margin-bottom:4px}
+.vitals .hp b{font-size:22px;color:#6ee7a8}
+.vitals .abils{flex:1 1 260px}
+.vitals .abils ul{margin:0;padding-left:18px}
+.vitals .abils li{margin-bottom:6px;font-size:13.5px;line-height:1.45}
+.dmg{margin-left:6px;padding:1px 7px;border-radius:7px;background:#2a1b1b;
+  border:1px solid #4b2b2b;color:#e79a9a;font-size:12px}
+
+/* ---- portrait upload (rare and above) ---- */
+.facerow{margin-top:12px;padding-top:12px;border-top:1px solid #1e2c40}
+.facelab{display:block;font-size:12px;color:#9fb0c9;margin-bottom:7px}
+.fc-file{display:block;margin-top:5px;font:inherit;font-size:12.5px;
+  color:#c7d4e6;max-width:100%}
+.fc-file::file-selector-button{margin-right:9px;padding:7px 12px;
+  border-radius:8px;border:1px solid #24344b;background:#131c2b;
+  color:#c7d4e6;font:inherit;font-size:12.5px;cursor:pointer}
+.lg-go{min-height:40px;padding:8px 18px;margin-top:8px}
+.fc-msg{margin-top:7px;font-size:12.5px}
+.fc-msg.ok{color:#6ee7a8}
+.fc-msg.err{color:#e79a9a}
+
+/* ---- forming a squad from the muster ---- */
+.mkrow{margin:0 0 20px;padding:12px;border-radius:12px;background:#0d1420;
+  border:1px solid #1e2c40}
+.mkrow input{padding:8px 11px;border-radius:9px;background:#0d1420;
+  border:1px solid #24344b;color:#e8eef7;font:inherit;font-size:13px;
+  margin-right:8px;min-width:200px}
+.mkrow .gbtn{margin-right:10px}
+.mkrow .hint{margin-top:8px}
+
+/* ---- the squad picker on an NPC's own card ---- */
+.sqpick{margin-top:12px;padding-top:12px;border-top:1px solid #1e2c40}
+.sqpick select{width:100%;box-sizing:border-box;margin-top:5px;padding:8px 10px;
+  border-radius:9px;background:#0d1420;border:1px solid #24344b;color:#e8eef7;
+  font:inherit;font-size:13px}
+.sqpick select:disabled{opacity:.5}
+.sqpick .facelab{margin-top:8px}
+.npnew{margin-top:10px;padding:10px;border-radius:10px;background:#0d1420;
+  border:1px solid #24344b}
+.npnew input,.npnew textarea{width:100%;box-sizing:border-box;margin-top:5px;
+  padding:8px 10px;border-radius:9px;background:#101a28;border:1px solid #24344b;
+  color:#e8eef7;font:inherit;font-size:13px}
+.npnew .gbtn{margin-top:10px;margin-right:10px}
+#j-new{margin-top:10px;padding:12px;border-radius:10px;background:#0d1420;
+  border:1px solid #24344b}
+#j-new .gbtn{margin-right:12px}
+
+/* ---- squads (inside the NPCs tab) ---- */
+.sqhead{display:flex;gap:14px;align-items:flex-start}
+.sqhead-t{flex:1;min-width:0}
+.sqhead h2{margin-top:0}
+.sqlogo{width:56px;height:56px;border-radius:14px;flex-shrink:0;display:flex;
+  align-items:center;justify-content:center;background:#131c2b;
+  border:1px solid #24344b;color:#7f92ad;font-weight:800;font-size:16px;
+  overflow:hidden}
+.sqlogo img{width:100%;height:100%;object-fit:cover;display:block}
+.logorow{margin-top:14px;padding-top:12px;border-top:1px solid #1e2c40}
+.muster{margin:0 0 26px;padding-bottom:22px;border-bottom:1px solid #1e2c40}
+.muster>h2:first-child{margin-top:0}
+.squad h2{display:flex;align-items:center;gap:10px}
+.linkbtn{background:none;border:0;padding:0;color:#8fa6c4;font:inherit;
+  font-size:12.5px;text-decoration:underline;cursor:pointer}
+.linkbtn:hover{color:#c7d4e6}
+.sqtag{display:inline-block;padding:1px 9px;border-radius:8px;font-size:12px;
+  margin-right:6px;border:1px solid #24344b;background:#131c2b}
+.sqtag.walking{color:#e7c98a;border-color:#4b3f2b}
+.sqtag.queued{color:#9fb0c9}
+.sqtag.home{color:#6ee7a8;border-color:#2b4b3a}
+.sqtab{width:100%;margin:10px 0 4px}
+.sqtab td{padding:6px 8px 6px 0;vertical-align:middle;border-bottom:1px solid #16202f}
+.sqtab select{padding:6px 8px;border-radius:8px;background:#0d1420;
+  border:1px solid #24344b;color:#e8eef7;font:inherit;font-size:13px}
+.sqadd,.sqsend{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.sqadd select,.sqsend select{padding:8px 10px;border-radius:9px;background:#0d1420;
+  border:1px solid #24344b;color:#e8eef7;font:inherit;font-size:13px;max-width:100%}
+.whorow{display:block;margin:0 0 14px;font-size:13px;color:#9fb0c9}
+.whorow input{width:100%;max-width:320px;box-sizing:border-box;padding:9px 11px;
+  border-radius:9px;background:#0d1420;border:1px solid #24344b;color:#e8eef7;
+  font:inherit;font-size:14px;display:block;margin-top:5px}
+
+/* ---- the forge ---- */
+.pcard label{display:block;margin:12px 0 4px;font-size:13px;color:#9fb0c9}
+.pcard input[type=text],.pcard select,.pcard textarea{
+  width:100%;box-sizing:border-box;padding:9px 11px;border-radius:9px;
+  background:#0d1420;border:1px solid #24344b;color:#e8eef7;
+  font:inherit;font-size:14px}
+.pcard textarea{resize:vertical;min-height:64px}
+.pcard input:focus,.pcard select:focus,.pcard textarea:focus{
+  outline:none;border-color:#4d7fb8}
+#f-send{margin-top:14px;padding:11px 20px;min-height:44px;border-radius:10px;
+  border:none;background:#2f6f4f;color:#fff;font:inherit;font-size:14px;
+  font-weight:600;cursor:pointer}
+#f-send:disabled{opacity:.6;cursor:default}
+.ok{margin-top:10px;color:#6ee7a8;font-size:13px}
+</style></head><body>
+<div id="gate"><div class="gatecard">
+  <h1>Project Chrysalis</h1>
+  <p>The Hollow Tide — team site. Enter your team's passcode.</p>
+  <input id="pw" type="password" autocomplete="off" placeholder="passcode">
+  <button id="go">Open</button>
+  <div class="err" id="err"></div>
+</div></div>
+<div id="app">
+  <header class="top">
+    <span class="brand">Project Chrysalis <span class="tide">· The Hollow Tide</span></span>
+    <button class="tabbtn on" data-t="team" onclick="pick('team')">Team</button>
+    <button class="tabbtn" data-t="players" onclick="pick('players')">Players</button>
+    <button class="tabbtn" data-t="base" onclick="pick('base')">Base</button>
+    <button class="tabbtn" data-t="npcs" onclick="pick('npcs')">NPCs</button>
+    <button class="tabbtn" data-t="forge" id="forgetab" style="display:none"
+            onclick="pick('forge')">Forge</button>
+    <span class="updated" id="updated"></span>
+  </header>
+  <div id="main"></div>
+</div>
+<script>
+const ENC={salt:"9a7+BddWbhwpMrXph3qHhw==",iv:"/ZT4y6ebI0yYt9Qr",ct:"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",iter:310000};
+let DATA=null,LIVE=null,liveOk=false,lastSig='',tab='team';
+let selHale=null,selNpc=null;
+const BLOBS={};
+const b64buf=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function unlock(){
+  const pw=document.getElementById('pw').value.replace(/\s+/g,'').toLowerCase();
+  const err=document.getElementById('err');
+  if(!pw){err.textContent='Enter the passcode.';return}
+  err.textContent='';
+  try{
+    const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+    const key=await crypto.subtle.deriveKey(
+      {name:'PBKDF2',salt:b64buf(ENC.salt),iterations:ENC.iter,hash:'SHA-256'},
+      km,{name:'AES-GCM',length:256},false,['decrypt']);
+    const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64buf(ENC.iv)},key,b64buf(ENC.ct));
+    DATA=JSON.parse(new TextDecoder().decode(pt));
+  }catch(e){err.textContent='That passcode does not open this tide.';return}
+  document.getElementById('gate').style.display='none';
+  document.getElementById('app').style.display='block';
+  // The Forge tab exists only for a team that has dealt with Kawelo. Teams who
+  // haven't never see it — the forge is earned in fiction, not advertised.
+  if((DATA.forge||{}).unlocked)document.getElementById('forgetab').style.display='';
+  render();
+  startLive();
+}
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money=n=>'$'+Number(n||0).toLocaleString();
+const initials=n=>String(n||'?').split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+/* ---- the live window: the bot's team API, token baked in this payload ---- */
+async function api(path,body){
+  if(!DATA.api||!DATA.token)throw new Error('no live link');
+  const r=await fetch(DATA.api+path,{method:body?'POST':'GET',
+    headers:{'Authorization':'Bearer '+DATA.token,
+             ...(body?{'Content-Type':'application/json'}:{})},
+    body:body?JSON.stringify(body):undefined});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(j.error||('error '+r.status));
+  return j;
+}
+async function blobFor(path,key){
+  if(BLOBS[key]!==undefined)return BLOBS[key];
+  BLOBS[key]='';
+  try{
+    const r=await fetch(DATA.api+path,{headers:{'Authorization':'Bearer '+DATA.token}});
+    if(r.ok)BLOBS[key]=URL.createObjectURL(await r.blob());
+  }catch(e){}
+  return BLOBS[key];
+}
+function theBase(){return (liveOk&&LIVE&&LIVE.base)?LIVE.base:DATA.base}
+async function pollBase(){
+  if(!DATA.api||!DATA.token)return;
+  let changed=false;
+  try{
+    const j=await api('/api/team/base');
+    const sig=JSON.stringify(j);
+    changed=(sig!==lastSig)||!liveOk;
+    lastSig=sig;LIVE=j;liveOk=true;
+  }catch(e){changed=liveOk;LIVE=null;liveOk=false}
+  if(changed&&(tab==='base'||tab==='npcs'))render();
+}
+function startLive(){
+  if(!DATA.api||!DATA.token)return;
+  pollBase();
+  /* Primed once, like pollBase above it. Without this the muster waited for
+     the first 15s tick even when the page opened straight onto the NPCs tab. */
+  if(DATA.squads)pollSquads();
+  setInterval(()=>{if(!document.hidden)pollBase()},10000);
+  setInterval(()=>{if(!document.hidden&&tab==='npcs'&&DATA.squads)pollSquads()},15000);
+}
+function pick(t){tab=t;selHale=null;selNpc=null;render();
+  if(t==='base'||t==='npcs')pollBase();
+  if(t==='npcs'&&DATA.squads)pollSquads()}
+/* ---- squads ----
+   A squad is a formation of your own NPCs that marches as one party and holds
+   a village. Entirely live: there is nothing to bake, because where a squad is
+   standing changes by the minute. */
+let SQ=null,sqErr='';
+async function pollSquads(){
+  try{SQ=await api('/api/team/squads');sqErr=''}
+  catch(e){sqErr=e.message}
+  /* The muster moved INSIDE the NPCs tab and this check did not follow it.
+     There is no 'squads' tab, so this never fired: pollSquads filled SQ and
+     nothing repainted, leaving "Reading the muster roll..." and NO Form a
+     squad button until some other event forced a render. Switching tab and
+     coming back was that event, which is exactly how it was reported. */
+  if(tab==='npcs')render();
+}
+async function sqCall(path,body){
+  try{
+    const j=await api(path,body);
+    if(j&&j.squads)SQ=j;else await pollSquads();
+    sqErr='';
+  }catch(e){sqErr=e.message}
+  render();
+}
+function whenText(t){
+  const s=Math.max(0,Math.round(t-(Date.now()/1000)));
+  if(s<60)return s+'s';
+  if(s<3600)return Math.round(s/60)+' min';
+  if(s<86400)return Math.round(s/360)/10+' h';
+  return Math.round(s/8640)/10+' days';
+}
+/* Every vocabulary the players own — squads, roles, jobs — is a dropdown with
+   its own "add new" entry at the bottom, rather than a separate form sitting
+   somewhere else on the page. Picking the last option reveals the fields
+   inline, right where you were already looking. */
+const NEWOPT='<option value="+">+ New…</option>';
+function roleOptions(sel){
+  return ['<option value="">— role —</option>']
+    .concat((SQ.roles||[]).map(r=>`<option value="${esc(r.name)}"${
+      r.name===sel?' selected':''}>${esc(r.name)}</option>`))
+    .concat('<option value="+">+ New role…</option>').join('');
+}
+/* A squad is what LEAVES Final Measure. An NPC who stays isn't in one — they
+   simply hold their job there (owner ruling 2026-08-02). So the card offers a
+   posting, and the two kinds of posting are the home base or a squad. */
+function squadOptions(sel){
+  return [`<option value="">At ${esc(SQ.home_name||'base')} — their own job</option>`]
+    .concat((SQ.squads||[]).map(s=>`<option value="${esc(s.id)}"${
+      s.id===sel?' selected':''}>${esc(s.name)}</option>`))
+    .concat('<option value="+">+ New squad…</option>').join('');
+}
+/* Which squad an NPC stands in, and under what role. */
+function squadOf(key){
+  return (SQ.squads||[]).find(s=>(s.members||[]).some(m=>m.key===key));
+}
+function roleOf(key){
+  const s=squadOf(key);
+  if(!s)return '';
+  return ((s.members||[]).find(m=>m.key===key)||{}).role||'';
+}
+/* The squad controls that ride on an NPC's own card. This is where assigning
+   someone actually belongs — you decide a person's posting while looking at
+   the person, not by hunting for the squad they aren't in yet. */
+function squadPicker(c){
+  if(!(DATA.squads&&SQ&&liveOk))return'';
+  const mine=squadOf(c.key);
+  const marching=mine&&mine.trip;
+  if(marching)return `<div class="sqpick"><span class="facelab">Posting</span>
+    <div class="pmeta"><b>${esc(mine.name)}</b> — on the road, so their posting
+    is fixed until they arrive.</div></div>`;
+  // In a squad → they take a role in it. At home → they keep their job, and
+  // the only thing left to choose is which hale they work out of.
+  const second=mine
+    ? `<label class="facelab">Role in the squad
+         <select class="np-role">${roleOptions(roleOf(c.key))}</select></label>`
+    : `<div class="pmeta muted np-athome">Staying at
+         ${esc(SQ.home_name||'base')}${c.forge&&c.forge.job?' as '+esc(c.forge.job):''}${
+         c.post?', out of '+esc(c.post):''}.</div>`;
+  return `<div class="sqpick" data-npc="${esc(c.key)}">
+    <label class="facelab">Posting
+      <select class="np-squad">${squadOptions(mine?mine.id:'')}</select></label>
+    ${second}
+    <div class="npnew" style="display:none"></div>
+    <div class="fc-msg muted np-msg"></div></div>`;
+}
+/* The inline panel a "+ New…" choice opens, for either dropdown. */
+function newPanel(kind){
+  if(kind==='squad')return `<label class="facelab">Name the squad
+    <input type="text" class="nn-name" placeholder="e.g. The Salt Line"></label>
+    <button class="gbtn nn-go">Form it</button>
+    <button class="linkbtn nn-cancel">cancel</button>`;
+  return `<label class="facelab">Name the role
+    <input type="text" class="nn-name" placeholder="e.g. Reef Scout"></label>
+    <label class="facelab">What do they do?
+      <textarea class="nn-desc" rows="2"></textarea></label>
+    <button class="gbtn nn-go">Save the role</button>
+    <button class="linkbtn nn-cancel">cancel</button>
+    <p class="hint">Yours to invent. It joins every squad's dropdown, and the
+    devs are told so they can give it teeth.</p>`;
+}
+function wireSquadPicker(root){
+  const box=root.querySelector('.sqpick[data-npc]');
+  if(!box)return;
+  const key=box.dataset.npc;
+  const sq=box.querySelector('.np-squad'), ro=box.querySelector('.np-role');
+  const roleVal=()=>(ro&&ro.value!=='+')?ro.value:'';
+  const panel=box.querySelector('.npnew'), msg=box.querySelector('.np-msg');
+  const close=()=>{panel.style.display='none';panel.innerHTML=''};
+  const open=(kind,then)=>{
+    panel.innerHTML=newPanel(kind);panel.style.display='';
+    const name=panel.querySelector('.nn-name');
+    name.focus();
+    panel.querySelector('.nn-cancel').onclick=()=>{close();render()};
+    panel.querySelector('.nn-go').onclick=()=>{
+      const v=name.value.trim();
+      if(!v){msg.textContent='Give it a name first.';return}
+      then(v,(panel.querySelector('.nn-desc')||{}).value||'');
+    };
+  };
+  sq.onchange=()=>{
+    if(sq.value==='+')return open('squad',(name)=>
+      sqCall('/api/team/squad',{action:'create',name:name,npc:key,
+                                role:roleVal(),player:sqWho()}));
+    close();
+    if(!sq.value){
+      const mine=squadOf(key);
+      if(mine)sqCall('/api/team/squad',
+        {action:'remove',id:mine.id,npc:key,player:sqWho()});
+      return;
+    }
+    sqCall('/api/team/squad',{action:'add',id:sq.value,npc:key,
+      role:roleVal(),player:sqWho()});
+  };
+  if(ro)ro.onchange=async()=>{
+    const mine=squadOf(key);
+    if(ro.value==='+')return open('role',async(name,desc)=>{
+      try{
+        const j=await api('/api/team/role-add',{name:name,desc:desc,player:sqWho()});
+        if(SQ)SQ.roles=j.roles||SQ.roles;
+        if(mine)await sqCall('/api/team/squad',
+          {action:'role',id:mine.id,npc:key,role:name,player:sqWho()});
+        else render();
+      }catch(e){sqErr=e.message;render()}
+    });
+    if(!mine){msg.textContent='Put them in a squad first.';return}
+    sqCall('/api/team/squad',
+      {action:'role',id:mine.id,npc:key,role:ro.value,player:sqWho()});
+  };
+}
+function squadCard(s){
+  const rows=(s.members||[]).map(m=>`<tr data-npc="${esc(m.key)}">
+    <td><b>${esc(m.name)}</b>${m.job?'<div class="muted fsm">'+esc(m.job)+'</div>':''}</td>
+    <td><select class="sq-role">${roleOptions(m.role)}</select></td>
+    <td class="muted">${m.hp?esc(m.hp)+' max HP':''}</td>
+    <td><button class="linkbtn sq-drop">remove</button></td></tr>`).join('')
+    ||'<tr><td colspan="4" class="muted">Nobody posted to this squad yet.</td></tr>';
+  const free=(SQ.unassigned||[]).map(n=>
+    `<option value="${esc(n.key)}">${esc(n.name)}${n.job?' — '+esc(n.job):''}</option>`).join('');
+  let status,controls;
+  if(s.trip){
+    const t=s.trip;
+    status=t.state==='queued'
+      ? `<span class="sqtag queued">leaves in ${whenText(t.depart)}</span>
+         marching to <b>${esc(placeName(t.to))}</b>`
+      : `<span class="sqtag walking">on the road</span>
+         to <b>${esc(placeName(t.to))}</b> — arrives in ${whenText(t.arrive)}`;
+    controls=`<p class="hint">They're already moving. Wait for them to arrive
+      before you give a new order.</p>`;
+  }else{
+    const at=(s.members||[]).map(m=>m.place).filter((v,i,a)=>a.indexOf(v)===i);
+    const here=at.length===1?(at[0]?placeName(at[0]):SQ.home_name):
+               at.length?'scattered':'—';
+    status=`<span class="sqtag home">holding</span> <b>${esc(here)}</b>`;
+    controls=`<div class="sqsend">
+      <select class="sq-dest">${(SQ.places||[]).map(p=>
+        `<option value="${esc(p.key)}">${esc(p.name)}${
+          p.minutes!=null?' — '+Math.round(p.minutes/60)+'h from base':''}</option>`).join('')}</select>
+      <select class="sq-when">
+        <option value="0">Send now</option>
+        <option value="1">Send in 1 hour</option>
+        <option value="6">Send in 6 hours</option>
+        <option value="12">Send in 12 hours</option>
+        <option value="24">Send tomorrow</option>
+      </select>
+      <button class="gbtn sq-go">Send</button>
+      <button class="linkbtn sq-home">recall to base</button></div>`;
+  }
+  return `<div class="pcard squad" data-sq="${esc(s.id)}">
+    <div class="sqhead">
+      <div class="sqlogo">${esc(initials(s.name))}</div>
+      <div class="sqhead-t">
+        <h2>${esc(s.name)} <button class="linkbtn sq-kill">disband</button></h2>
+        <div class="pmeta">${status}</div>
+      </div>
+    </div>
+    <div class="tscroll"><table class="sqtab"><tbody>${rows}</tbody></table></div>
+    <div class="sqadd">
+      <select class="sq-new">${free||'<option value="">everyone is posted</option>'}</select>
+      <button class="linkbtn sq-add">post to squad</button></div>
+    ${controls}
+    <div class="logorow">
+      <label class="facelab">${s.logo?'Replace their logo':'Give them a logo'}
+        <input type="file" class="lg-file"
+               accept="image/png,image/jpeg,image/gif,image/webp"></label>
+      <button class="gbtn lg-go">Upload</button>
+      <div class="fc-msg muted lg-msg"></div>
+      <p class="hint">A picture or a gif, 10MB max — the mark this squad
+      carries. It goes with them, and goes when they disband.</p>
+    </div></div>`;
+}
+function placeName(k){
+  const p=(SQ&&SQ.places||[]).find(x=>x.key===k);
+  return p?p.name:k;
+}
+function wireSquad(el){
+  const sid=el.dataset.sq;
+  const q=(s)=>el.querySelector(s);
+  const rec=(SQ.squads||[]).find(x=>x.id===sid)||{};
+  const badge=q('.sqlogo');
+  if(badge&&rec.logo)blobFor('/api/team/squad-logo-img?id='+encodeURIComponent(sid),
+                             'squad:'+sid).then(u=>{
+    if(u)badge.innerHTML='<img src="'+u+'" alt="">'});
+  const lgo=q('.lg-go');
+  if(lgo)lgo.onclick=async()=>{
+    const msg=q('.lg-msg');
+    // classList, not className — the element is re-queried by its .lg-msg
+    // hook, and overwriting className would strip that hook off after the
+    // first message, leaving the second one with nowhere to land.
+    const say=(cls,text)=>{
+      msg.classList.remove('muted','ok','err');
+      msg.classList.add(cls);msg.textContent=text;
+    };
+    let pic;
+    try{pic=await fileB64(q('.lg-file'))}
+    catch(e){say('err',e.message);return}
+    if(!pic){say('muted','Pick a file first.');return}
+    lgo.disabled=true;lgo.textContent='Uploading…';msg.textContent='';
+    try{
+      const j=await api('/api/team/squad-logo',
+        {id:sid,filename:pic.filename,content_type:pic.content_type,data:pic.data});
+      BLOBS['squad:'+sid]=undefined;      // drop the cached old mark
+      if(j&&j.squads)SQ=j;
+      sqErr='';render();
+    }catch(e){
+      say('err',e.message);
+      lgo.disabled=false;lgo.textContent='Upload';
+    }
+  };
+  el.querySelectorAll('tr[data-npc]').forEach(tr=>{
+    const npc=tr.dataset.npc;
+    const sel=tr.querySelector('.sq-role');
+    if(sel)sel.onchange=()=>sqCall('/api/team/squad',
+      {action:'role',id:sid,npc:npc,role:sel.value,player:sqWho()});
+    const drop=tr.querySelector('.sq-drop');
+    if(drop)drop.onclick=()=>sqCall('/api/team/squad',
+      {action:'remove',id:sid,npc:npc,player:sqWho()});
+  });
+  if(q('.sq-add'))q('.sq-add').onclick=()=>{
+    const v=q('.sq-new').value;
+    if(v)sqCall('/api/team/squad',{action:'add',id:sid,npc:v,player:sqWho()});
+  };
+  if(q('.sq-kill'))q('.sq-kill').onclick=()=>{
+    if(confirm('Disband this squad? The NPCs stay where they are.'))
+      sqCall('/api/team/squad',{action:'disband',id:sid,player:sqWho()});
+  };
+  if(q('.sq-go'))q('.sq-go').onclick=()=>{
+    const hrs=Number(q('.sq-when').value||0);
+    sqCall('/api/team/squad-send',{id:sid,place:q('.sq-dest').value,
+      depart:hrs?(Date.now()/1000+hrs*3600):0,player:sqWho()});
+  };
+  if(q('.sq-home'))q('.sq-home').onclick=()=>
+    sqCall('/api/team/squad-send',{id:sid,recall:true,player:sqWho()});
+}
+function sqWho(){
+  const el=document.getElementById('sq-who');
+  const v=el?el.value.trim():'';
+  if(v)try{localStorage.setItem('tht-who',v)}catch(e){}
+  return v;
+}
+function savedWho(){
+  try{return localStorage.getItem('tht-who')||''}catch(e){return ''}
+}
+/* The muster lives inside the NPCs tab — squads are a way of arranging the
+   same people the tab already lists, so splitting them across two tabs made
+   you hold the roster in your head. Returns HTML; wireSquads attaches it. */
+function squadsBlock(){
+  if(!(DATA.squads&&DATA.api&&DATA.token))return'';
+  if(!SQ)return`<div class="muster"><h2>Squads</h2><p class="muted">`
+    +(sqErr?esc(sqErr):'Reading the muster roll…')+`</p></div>`;
+  const cards=(SQ.squads||[]).map(squadCard).join('')
+    ||`<p class="muted">No squads yet. Name one above, then post people to it —
+       or pick <b>+ New squad…</b> straight from any NPC's Posting dropdown,
+       which does both at once.</p>`;
+  return `<div class="muster">
+    <h2>Squads</h2>
+    <p class="muted">A squad marches as one party and holds the village it
+    arrives at — while they're standing there, that place is yours. Home is
+    <b>${esc(SQ.home_name||'base')}</b>.</p>
+    <label class="whorow">Your player name
+      <input id="sq-who" type="text" value="${esc(savedWho())}"
+             placeholder="so the log knows who gave the order"></label>
+    <div class="mkrow">
+      <input id="sq-name" type="text" placeholder="Name a new squad — e.g. The Salt Line">
+      <button class="gbtn" id="sq-make">Form a squad</button>
+      <p class="hint">An empty squad is fine. Post people to it from its own
+      list below, or from any NPC's Posting dropdown.</p>
+    </div>
+    ${sqErr?'<div class="err">'+esc(sqErr)+'</div>':''}
+    ${cards}</div>`;
+}
+function wireSquads(m){
+  if(!(DATA.squads&&SQ))return;
+  m.querySelectorAll('.squad').forEach(wireSquad);
+  const name=m.querySelector('#sq-name'), make=m.querySelector('#sq-make');
+  const form=()=>{
+    const n=(name||{}).value||'';
+    if(!n.trim()){sqErr='Name the squad first.';render();return}
+    sqCall('/api/team/squad',{action:'create',name:n,player:sqWho()});
+  };
+  if(make)make.onclick=form;
+  if(name)name.addEventListener('keydown',e=>{if(e.key==='Enter')form()});
+}
+/* ---- base map geometry (ring fallback = the bot's base_map_view math) ---- */
+function haleXY(h,i,n,cv){
+  if(typeof h.x==='number'&&typeof h.y==='number')return{x:h.x,y:h.y};
+  const a=-Math.PI/2+2*Math.PI*i/Math.max(1,n);
+  return{x:cv.w/2+cv.w*0.38*Math.cos(a),y:cv.h/2+cv.h*0.36*Math.sin(a)};
+}
+function liveTag(){
+  if(!DATA.token)return'';
+  return liveOk?'<span class="livetag"><span class="livedot"></span>live</span>'
+               :'<span class="livetag"><span class="offdot"></span>offline — last snapshot</span>';
+}
+function wirePortrait(el,c){
+  if(!el)return;
+  if(c.gif){el.innerHTML='<img src="'+esc(c.gif)+'" alt="">';return}
+  if(c.image&&liveOk)blobFor('/api/team/npc-image?key='+encodeURIComponent(c.key),'npc:'+c.key)
+    .then(u=>{if(u)el.innerHTML='<img src="'+u+'" alt="">'});
+}
+function npcCard(c,withMove){
+  const routine=(c.routine||[]).map(r=>'<li>'+esc(r)+'</li>').join('');
+  // Health and what they can do. The bot sends ability NAMES and damage only —
+  // never how to beat them (threat notes and kill notes stay dev-side).
+  const abil=(c.abilities||[]).map(a=>
+    '<li><b>'+esc(a.name)+'</b>'+(a.damage?' <span class="dmg">'+esc(a.damage)+'</span>':'')
+    +(a.desc?'<br><span class="muted">'+esc(a.desc)+'</span>':'')+'</li>').join('');
+  const vitals=(c.hp||abil)?`<div class="vitals">
+    ${c.hp?'<div class="hp"><span class="k">Constitution</span><b>'+c.hp+'</b></div>':''}
+    ${abil?'<div class="abils"><span class="k">Abilities</span><ul>'+abil+'</ul></div>':''}
+    </div>`:'';
+  const inSquad=DATA.squads&&SQ&&liveOk&&!!squadOf(c.key);
+  const move=(withMove&&liveOk&&!inSquad)?`
+    <div class="moverow"><select class="mv-house">${(theBase().houses||[])
+      .map(h=>'<option '+(h.name===c.post?'selected':'')+'>'+esc(h.name)+'</option>').join('')}</select>
+    <button class="gbtn mv-go">Move</button></div>
+    <p class="hint">Tasks and routines are set by the devs — you can move your
+    NPC between hale, not rewrite their day.</p>`:'';
+  return `<div class="pcard npcprof" data-npc="${esc(c.key)}">
+    <div class="npcprof-head">
+      <div class="portrait">${esc(initials(c.name))}</div>
+      <div><h2>${esc(c.name)}</h2>
+        <div class="pmeta">${(c.titles||[]).length?esc(c.titles.join(', '))+' · ':''}${esc(c.affiliation||'')}</div>
+        <div class="pmeta">Post: <b>${esc(c.post||'—')}</b>${c.function?' <span class="muted">('+esc(c.function)+')</span>':''}</div>
+        ${c.away?'<div class="pmeta"><span class="sqtag walking">away</span>'+esc(c.away)+'</div>':''}
+        ${c.squad?'<div class="pmeta muted">🛡️ '+esc(c.squad)+(c.squad_role?' · '+esc(c.squad_role):'')+'</div>':''}
+      </div></div>
+    ${squadPicker(c)}
+    ${c.forge&&c.forge.owner?'<div class="pmeta forgeline">🜲 forged by <b>'
+      +esc(c.forge.owner)+'</b>'+(c.forge.rarity?' · '+esc(c.forge.rarity):'')
+      +(c.forge.job?' · '+esc(c.forge.job):'')+'</div>':''}
+    ${c.blurb?'<div class="npcblurb">'+esc(c.blurb)+'</div>':''}
+    ${vitals}
+    ${c.task?'<div class="taskline"><span class="k">Current task</span>'+esc(c.task)+'</div>':''}
+    ${routine?'<div class="routine"><span class="k">Routine</span><ul>'+routine+'</ul></div>':''}
+    ${(!c.task&&!routine)?'<p class="muted fsm">No task or routine on record yet.</p>':''}
+    ${move}</div>`;
+}
+function wireNpcCard(root,c){
+  wirePortrait(root.querySelector('.portrait'),c);
+  wireSquadPicker(root);
+  const go=root.querySelector('.mv-go');
+  if(go)go.onclick=async()=>{
+    const house=root.querySelector('.mv-house').value;
+    go.disabled=true;go.textContent='Moving…';
+    try{await api('/api/team/base-npc',{npc:c.key,house});lastSig='';await pollBase()}
+    catch(e){alert(e.message);go.disabled=false;go.textContent='Move'}
+  };
+}
+function renderBase(m){
+  const b=theBase();
+  if(!b){m.innerHTML='<h1>Base</h1><p class="muted">No base on record for this team — yet.</p>';return}
+  const cv=b.canvas||{w:1200,h:800};
+  const pct=(v,a)=>(v/(a==='x'?cv.w:cv.h)*100)+'%';
+  const n=(b.houses||[]).length;
+  let marks='';
+  (b.houses||[]).forEach((h,i)=>{
+    const p=haleXY(h,i,n,cv);
+    marks+=`<div class="bhale${selHale===h.name?' sel':''}" data-hale="${esc(h.name)}"
+      style="left:${pct(p.x,'x')};top:${pct(p.y,'y')}">
+      <div class="hbox">⌂</div><div class="hlbl">${esc(h.name)}</div></div>`;
+    (h.npcs||[]).forEach((k,j)=>{
+      const c=(b.npcs||{})[k];if(!c)return;
+      /* Scales with the canvas, exactly as map/dashboard.html does. These
+         offsets were authored against the default 1200x800 and turned into
+         a PERCENT of whatever canvas is live, so an uploaded ground plan
+         (Final Measure is 2500x2500) halved the gap and piled the dots up.
+         THERE ARE TWO COPIES OF THIS FORMULA -- this one and
+         map/dashboard.html -- and they must move together. */
+      const gx=26*(cv.w/1200),gy=26*(cv.h/800);
+      const dx=p.x-gx+(j%3)*gx,dy=p.y+gy*(34/26)+Math.floor(j/3)*gy;
+      marks+=`<div class="bnpc${selNpc===k?' sel':''}" data-npc="${esc(k)}"
+        title="${esc(c.name)} — ${esc(h.name)}"
+        style="left:${pct(dx,'x')};top:${pct(dy,'y')}">${esc(initials(c.name))}</div>`;
+    });
+  });
+  m.innerHTML=`<h1>${esc(b.name)}</h1>
+    <div class="pmeta">${b.status?'📍 <b>'+esc(b.status)+'</b>':''}
+      ${b.steward?' · Steward: <b>'+esc(b.steward)+'</b>':''}${liveTag()}</div>
+    ${b.desc?'<p class="basedesc">'+esc(b.desc)+'</p>':''}
+    <div class="bmapwrap" style="aspect-ratio:${cv.w} / ${cv.h}">
+      <div class="bground" id="bground"></div>
+      <div class="boverlay">${marks}</div>
+    </div>
+    <p class="hint">Every glowing dot is one of your NPCs, live from the island —
+    tap a house or a dot for details.${liveOk?' You can move your NPCs between hale from their card.':''}</p>
+    <div id="bpanel"></div>`;
+  if(b.image&&liveOk)blobFor('/api/team/base-image','plan:'+(b.key||''))
+    .then(u=>{const g=document.getElementById('bground');
+      if(u&&g)g.style.cssText='background:url('+u+') center/cover no-repeat'});
+  m.querySelectorAll('.bhale').forEach(el=>el.onclick=()=>{
+    selHale=el.dataset.hale===selHale?null:el.dataset.hale;selNpc=null;render()});
+  m.querySelectorAll('.bnpc').forEach(el=>el.onclick=e=>{e.stopPropagation();
+    selNpc=el.dataset.npc===selNpc?null:el.dataset.npc;selHale=null;render()});
+  const box=m.querySelector('#bpanel');
+  if(selNpc){
+    const c=(b.npcs||{})[selNpc];
+    if(c){box.innerHTML=npcCard(c,true);wireNpcCard(box.firstElementChild,c)}
+  }else if(selHale){
+    const h=(b.houses||[]).find(x=>x.name===selHale);
+    if(h){box.innerHTML=`<div class="pcard"><h2>${esc(h.name)}${h.function?' <span class="muted fsm">— '+esc(h.function)+'</span>':''}</h2>
+      ${(h.npcs||[]).length?'<div class="pmeta">'+h.npcs.map(k=>{const c=(b.npcs||{})[k];
+        return '<a href="#" class="npclink" data-npc="'+esc(k)+'"><b>'+esc(c?c.name:k)+'</b></a>'}).join(' · ')+'</div>'
+        :'<div class="pmeta muted">No one stationed here right now.</div>'}
+      ${h.staff?'<div class="pmeta muted">Also: '+esc(h.staff)+'</div>':''}</div>`;
+      box.querySelectorAll('.npclink').forEach(a=>a.onclick=e=>{e.preventDefault();
+        selNpc=a.dataset.npc;selHale=null;render()});
+    }
+  }
+}
+function render(){
+  document.querySelectorAll('.tabbtn').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
+  document.getElementById('updated').textContent='updated '+DATA.updated;
+  const m=document.getElementById('main');
+  if(tab==='team'){
+    const roster=DATA.players.map(p=>`<tr><td><b>${esc(p.name)}</b></td>
+      <td class="muted">${esc(p.pronouns)}</td><td>${esc(p.label)}</td>
+      <td class="muted">${esc((p.titles||[]).join(', '))}</td></tr>`).join('');
+    const stash=DATA.stash.length?DATA.stash.map(i=>`<tr><td>${esc(i.name)}</td>
+      <td>×${i.qty}</td><td class="muted">${esc(i.desc||'')}</td></tr>`).join('')
+      :'<tr><td colspan="3" class="muted">The stash is empty.</td></tr>';
+    m.innerHTML=`<h1>${esc(DATA.team)}</h1>
+      <div><span class="stat goldv"><div class="v">${money(DATA.treasury)}</div><div class="k">Team Bank</div></span>
+      <span class="stat"><div class="v">${DATA.players.length}</div><div class="k">Players</div></span>
+      <span class="stat"><div class="v">${DATA.stash.length}</div><div class="k">Stash items</div></span></div>
+      <h2>Roster</h2><div class="tscroll"><table><thead><tr><th>Name</th><th>Pronouns</th><th>Label</th><th>Titles</th></tr></thead>
+      <tbody>${roster}</tbody></table></div>
+      <h2>Team stash</h2><div class="tscroll"><table><thead><tr><th>Item</th><th>Qty</th><th>About</th></tr></thead>
+      <tbody>${stash}</tbody></table></div>`;
+  }else if(tab==='base'){
+    renderBase(m);
+  }else if(tab==='npcs'){
+    const b=theBase();
+    const cards=b?Object.values(b.npcs||{}).sort((a,c)=>a.name.localeCompare(c.name)):[];
+    const roster=cards.length
+      ? `<h2>Everyone at ${esc(b.name)}</h2>
+         <div class="npcgrid">${cards.map(c=>npcCard(c,true)).join('')}</div>`
+      : '<p class="muted">No NPCs stationed at your base — yet.</p>';
+    m.innerHTML=`<h1>NPCs${liveTag()}</h1>${squadsBlock()}${roster}`;
+    wireSquads(m);
+    m.querySelectorAll('.npcprof').forEach(el=>{
+      const c=(b.npcs||{})[el.dataset.npc];
+      if(c){wireNpcCard(el,c);
+        el.style.cursor='pointer';
+        el.onclick=e=>{if(e.target.closest('.moverow,.sqpick,a'))return;
+          tab='base';selNpc=c.key;selHale=null;render();
+          document.querySelectorAll('.tabbtn').forEach(x=>x.classList.toggle('on',x.dataset.t==='base'))};
+      }});
+  }else if(tab==='forge'){
+    m.innerHTML='<h1>The Forge</h1>'+forgeForm();
+  }else{
+    m.innerHTML='<h1>Players</h1>'+DATA.players.map(p=>{
+      const sk=Object.entries(p.skills||{}).filter(e=>e[1]>0)
+        .map(e=>e[0].charAt(0).toUpperCase()+e[0].slice(1)+' '+(['','I','II','III','IV','V'][e[1]]||e[1])).join(' · ');
+      const inv=(p.inventory||[]).map(i=>`<tr><td>${esc(i.name)}</td><td>×${i.qty}</td>
+        <td class="muted">${esc(i.desc||'')}</td></tr>`).join('')
+        ||'<tr><td colspan="3" class="muted">Empty bag.</td></tr>';
+      return `<div class="pcard"><h2>${esc(p.name)}</h2>
+        <div class="pmeta">${esc(p.pronouns)}${p.pronouns?' · ':''}<b>${esc(p.label)}</b>
+        ${p.affiliation?' · '+esc(p.affiliation):''}
+        ${(p.titles||[]).length?' · '+esc(p.titles.join(', ')):''}</div>
+        <div class="pmeta">💰 ${money(p.wallet)}${sk?' · 🎓 '+esc(sk):''}</div>
+        <div class="tscroll"><table><thead><tr><th>Item</th><th>Qty</th><th>About</th></tr></thead><tbody>${inv}</tbody></table></div>
+        </div>`;}).join('');
+  }
+}
+
+/* ---- the forge ----
+   Buy a card from Kawelo, author the NPC here, a dev rules on it. The form
+   shows only the fields that card pays for, and only the jobs still open. */
+function forgeRarity(){
+  const s=document.getElementById('f-rarity');
+  return s?s.value:'common';
+}
+function forgeForm(){
+  const F=DATA.forge||{}, r=forgeRarity();
+  const fields=(F.fields||{})[r]||[];
+  const jobs=(F.jobs||[]).filter(j=>r==='special'||
+      (F.tiers||[]).indexOf(j.tier)<=(F.tiers||[]).indexOf(r));
+  const rows=fields.map(f=>{
+    if(f==='job'){
+      // "common+", not "common". A job's tier is the LOWEST card that may take
+      // it, never a ceiling on what you get — but the bare word read as a
+      // verdict on the NPC you were about to forge. Velvet asked (2026-08-09)
+      // for Squadron Member to be "both common and uncommon as the same role",
+      // which it already was: she was reading "Squadron Member — common" while
+      // holding an uncommon card and concluding it would forge a common one.
+      // The card sets the HP band and how much of the character you write; the
+      // job only sets where in that band they land.
+      // A FULL job is shown and disabled, never hidden. Dropping it made
+      // "all posts filled" indistinguishable from "the site is broken" —
+      // see the note in forge_payload for the day that cost.
+      const opts=jobs.map(j=>{
+        const note=j.full
+          ?` — all ${j.cap} post${j.cap===1?'':'s'} filled`
+          :(j.left!==null&&j.left!==undefined?` (${j.left} left)`:'');
+        return `<option value="${esc(j.title)}"${j.full?' disabled':''}>`
+          +`${esc(j.title)} — ${esc(j.tier)}+${note}</option>`;
+      }).join('');
+      const anyOpen=jobs.some(j=>!j.full);
+      // Writing a job is the last entry in the same dropdown you pick one
+      // from, not a form elsewhere on the page.
+      return `<label>${esc((F.prompts||{}).job||'Job')}
+        <select id="f-job" onchange="jobPick()">${opts||'<option value="">no posts open</option>'}
+        <option value="+">+ Add a job…</option></select></label>
+        ${jobs.length&&!anyOpen?`<p class="hint">Every post this card can take
+        is filled. That is a cap, not a fault — ask a dev to raise one, or
+        write a new job with <b>+ Add a job…</b>.</p>`:''}
+        <p class="hint">Every post here takes the <b>${esc(r)}</b> card you are
+        spending — the tier beside a job is the <i>lowest</i> card it accepts,
+        not what you will get. Spend a better card on the same job and you get
+        a better character in it: the card sets their strength and how much of
+        them you write, the job only sets where in that band they land.</p>
+        <div id="j-new" style="display:none">
+          <label>Job title<input id="j-title" type="text" placeholder="e.g. Reef Warden"></label>
+          <label>What does the job actually do?<textarea id="j-desc" rows="3"
+            placeholder="A sentence or two — enough for a dev to tier it fairly."></textarea></label>
+          <label>Which tier are you asking for?
+            <select id="j-tier"><option value="">choose…</option>
+            ${(F.tiers||[]).map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('')}
+            </select></label>
+          <button class="gbtn" id="j-send" onclick="jobSend()">Propose it</button>
+          <button class="linkbtn" onclick="jobPick(true)">cancel</button>
+          <p class="hint">The tier is what decides which cards may hire the job:
+          a card can take a job of its own tier or below, so the higher you ask,
+          the rarer the card it takes. A dev has the final say on that and on how
+          many can exist. Once they've ruled it's in this dropdown for good —
+          it can't be used on the card you're forging right now.</p>
+          <div class="err" id="j-err"></div>
+        </div>`;
+    }
+    const big=['personality','voice','backstory','goal','ability','trait'].indexOf(f)>=0;
+    const p=esc((F.prompts||{})[f]||f);
+    return big?`<label>${p}<textarea id="f-${f}" rows="3"></textarea></label>`
+              :`<label>${p}<input id="f-${f}" type="text"></label>`;
+  }).join('');
+  // Rare and above choose their own face, so the picture rides WITH the
+  // submission — it used to be handed to a dev out of band, which is why so
+  // many forged NPCs ended up wearing a pool face they never picked.
+  const face=(F.portrait||[]).indexOf(r)>=0
+    ? `<div class="facerow"><label class="facelab">Their face — a picture or a gif
+         <input type="file" id="f-face" class="fc-file"
+                accept="image/png,image/jpeg,image/gif,image/webp">
+       </label>
+       <p class="hint">Optional, 10MB max. Send one and it's theirs the moment a
+       dev approves the card; skip it and they're given one from the pool.</p></div>`
+    : `<p class="muted">The card picks their face from the pool.</p>`;
+  const pend=(F.pending_jobs||[]).length
+    ? `<p class="hint">Waiting on a dev: ${(F.pending_jobs||[])
+        .map(j=>esc(j.title)).join(', ')}.</p>` : '';
+  return `<div class="pcard"><h2>Forge an NPC</h2>
+    <p class="muted">${esc((F.blurb||{})[r]||'')}</p>
+    <label>Which card are you spending?
+      <select id="f-rarity" onchange="render()">
+        ${['common','uncommon','rare','legendary','special'].map(x=>
+          `<option value="${x}"${x===r?' selected':''}>${x}</option>`).join('')}
+      </select></label>
+    <label>Your player name<input id="f-player" type="text"
+      placeholder="so the NPC knows who their creator is"></label>
+    ${rows}${face}
+    <button id="f-send" onclick="forgeSend()">Send to the devs</button>
+    <div class="err" id="f-err"></div>${pend}</div>`;
+}
+/* "+ Add a job…" is a choice in the job dropdown; picking it opens the fields
+   underneath and parks the select on nothing, so a proposal can never be
+   mistaken for the job this card is hiring. */
+function jobPick(cancel){
+  const sel=document.getElementById('f-job'), box=document.getElementById('j-new');
+  if(!sel||!box)return;
+  if(cancel||sel.value!=='+'){
+    box.style.display='none';
+    if(cancel)sel.selectedIndex=0;
+    return;
+  }
+  box.style.display='';
+  const t=document.getElementById('j-title');
+  if(t)t.focus();
+}
+async function fileB64(el){
+  const f=el&&el.files&&el.files[0];
+  if(!f)return null;
+  if(f.size>10*1024*1024)throw new Error('That picture is over 10MB.');
+  const b64=await new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>res(String(r.result).split(',')[1]||'');
+    r.onerror=()=>rej(new Error('could not read that file'));
+    r.readAsDataURL(f);
+  });
+  return {data:b64,filename:f.name,content_type:f.type};
+}
+async function jobSend(){
+  const err=document.getElementById('j-err'), btn=document.getElementById('j-send');
+  const tier=(document.getElementById('j-tier')||{}).value||'';
+  // Asked for here rather than left to the devs to guess, because a player who
+  // isn't given the field writes it into the title instead.
+  if(!tier){err.className='err';
+            err.textContent='Say which tier the job should be.';return}
+  btn.disabled=true;btn.textContent='Sending…';
+  try{
+    await api('/api/team/job-propose',{
+      title:(document.getElementById('j-title')||{}).value||'',
+      description:(document.getElementById('j-desc')||{}).value||'',
+      tier:tier,
+      player:(document.getElementById('f-player')||{}).value||''});
+    err.className='ok';
+    err.textContent='Sent. A dev rules on the tier, and then it joins the list.';
+    ['j-title','j-desc'].forEach(i=>{const e=document.getElementById(i);if(e)e.value=''});
+    const ts=document.getElementById('j-tier');if(ts)ts.selectedIndex=0;
+    jobPick(true);
+  }catch(e){err.className='err';err.textContent=e.message}
+  btn.disabled=false;btn.textContent='Propose it';
+}
+async function forgeSend(){
+  const F=DATA.forge||{}, r=forgeRarity();
+  const err=document.getElementById('f-err');
+  const body={rarity:r,player:(document.getElementById('f-player')||{}).value||''};
+  ((F.fields||{})[r]||[]).forEach(f=>{
+    const el=document.getElementById('f-'+f);
+    if(el)body[f]=(el.value==='+'?'':el.value);
+  });
+  body.portrait=(F.portrait||[]).indexOf(r)>=0;
+  const btn=document.getElementById('f-send');
+  if(btn){btn.disabled=true;btn.textContent='Sending…';}
+  try{
+    if(body.portrait){
+      const pic=await fileB64(document.getElementById('f-face'));
+      if(pic){body.image=pic.data;body.filename=pic.filename;
+              body.content_type=pic.content_type}
+    }
+    await api('/api/team/forge-submit',body);
+    err.className='ok';
+    err.textContent='Sent. A dev will confirm your card and make them real.';
+  }catch(e){
+    err.className='err';
+    err.textContent=e.message;
+    if(btn){btn.disabled=false;btn.textContent='Send to the devs';}
+  }
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('go').onclick=unlock;
+  document.getElementById('pw').addEventListener('keydown',e=>{if(e.key==='Enter')unlock()});
+});
+</script></body></html>
